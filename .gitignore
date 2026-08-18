@@ -1,2 +1,11 @@
 node_modules
 .env
+node_modules/.package-lock.json
+
+# Logs
+*.log
+skills-lock.json
+
+# Local agent skill installs
+.agents/
+.claude/
