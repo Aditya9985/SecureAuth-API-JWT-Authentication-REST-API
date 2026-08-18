@@ -27,6 +27,7 @@ The result is a reusable, layer-separated auth service you can drop into any fro
 | Auth             | jsonwebtoken + bcrypt + cookie-parser       | JWT issuance, password hashing, cookies  |
 | Logging          | Winston + Morgan                            | Structured logs + HTTP request logging   |
 | Security         | Helmet + CORS                               | HTTP headers & cross-origin policy       |
+| Security         | @arcjet/node                                | Rate limiting, bot detection & Shield (SQLi/XSS) |
 | Config           | dotenv                                       | Environment variable management          |
 | Tooling          | ESLint + Prettier                           | Code quality & formatting                |
 
@@ -40,10 +41,13 @@ src/
 ├── server.js                    # Creates HTTP server, listens on PORT
 ├── app.js                       # Express app: middleware stack + route mounting
 ├── config/
-│   ├── database.js              # Neon + Drizzle DB client (db, sql)
-│   └── logger.js                # Winston logger (JSON file + console)
+│   ├── arcjet.js                 # Arcjet client: shield + bot detection + rate-limit rules
+│   ├── database.js                # Neon + Drizzle DB client (db, sql)
+│   └── logger.js                 # Winston logger (JSON file + console)
 ├── models/
 │   └── user.model.js            # Drizzle table schema: users
+├── middlewares/
+│   └── security.middleware.js   # Arcjet protect() gate, runs before all routes
 ├── routes/
 │   └── auth.route.js            # /api/auth/* route definitions
 ├── controllers/
@@ -65,6 +69,8 @@ Client
   │  POST /api/auth/register
   ▼
 express.json() → cookieParser() → cors() → helmet() → morgan(log)
+  ▼
+securityMiddleware — aj.protect(req)   ← Shield (SQLi/XSS) + bot detection + rate limit (429/403)
   ▼
 auth.route.js (router.post('/register', signup))
   ▼
@@ -105,6 +111,8 @@ The same flow applies to **login** (`authenticateUser`: look up by email → `bc
 | Email already taken    | 409    | `{ message: "User already exists" }`    |
 | Account not found      | 404    | `{ message: "User not found" }`         |
 | Wrong password         | 401    | `{ message: "Invalid credentials" }`    |
+| Bot / attack detected  | 403    | `{ error: "Forbidden" }`                |
+| Rate limit exceeded    | 429    | `{ error, message, retryAfter }`        |
 | Unexpected server error| 500    | passed to Express error middleware      |
 
 ## Security Features
@@ -114,6 +122,10 @@ The same flow applies to **login** (`authenticateUser`: look up by email → `bc
 - **httpOnly + sameSite=strict + secure** cookies — token not readable by client-side JS, mitigating XSS.
 - **Helmet** sets security HTTP headers (X-Content-Type-Options, X-Frame-Options, etc.).
 - **Zod** schema validation on every input path — no unvalidated data reaches the DB.
+- **Arcjet** request-protection pipeline (`aj.protect()` before every route) with:
+  - `shield` — blocks SQL injection, XSS, and common attack payloads.
+  - `detectBot` — denies automated/bot traffic (allows search engines & link previews).
+  - `slidingWindow` — IP-based rate limiting (5 requests / 2s), returning `429 + Retry-After`.
 - **Duplicate-email guard** at the service layer, in addition to the DB `UNIQUE` constraint.
 - **CORS** middleware for controlled cross-origin access.
 
@@ -121,8 +133,9 @@ The same flow applies to **login** (`authenticateUser`: look up by email → `bc
 
 ### Prerequisites
 
-- Node.js ≥ 18
+- Node.js ≥ 24.5.0 (required by `@arcjet/node` — Node 20 is end-of-life)
 - A Neon (or any PostgreSQL) database URL
+- An Arcjet site key (free at https://app.arcjet.com)
 
 ### Installation
 
@@ -139,6 +152,7 @@ NODE_ENV=development
 LOG_LEVEL=info
 DB_URL=postgresql://...          # Neon / PostgreSQL connection string
 JWT_SECRET=your-super-secret     # used to sign JWT tokens
+ARCJET_KEY=ajkey_...             # Arcjet site key (rate limiting / bot protection)
 ```
 
 ### Database Setup
