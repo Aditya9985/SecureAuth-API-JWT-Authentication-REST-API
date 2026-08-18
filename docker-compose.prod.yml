@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  # SecureAuth API Application (Production)
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: secureauth-api-prod
+    restart: always
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env.production
+    # Do NOT mount source code in production - use built image only
+    # Do NOT use npm run dev in production
+    networks:
+      - app-network
+    # Health check for orchestration systems (Kubernetes, Docker Swarm, etc)
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  app-network:
+    driver: bridge

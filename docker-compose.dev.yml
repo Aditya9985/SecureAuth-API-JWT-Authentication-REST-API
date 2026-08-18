@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  # Neon Local PostgreSQL Database for Development
+  neon-local:
+    image: neondatabase/neon-local:latest
+    container_name: neon-local-db
+    ports:
+      - "5432:5432"
+    env_file:
+      - .env.development
+    volumes:
+      # Persist PostgreSQL data across container restarts
+      - neon-local-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+
+  # SecureAuth API Application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: secureauth-api-dev
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env.development
+    
+    depends_on:
+      neon-local:
+        condition: service_healthy
+    volumes:
+      # Mount source code for hot reload during development
+      - .:/app
+      - /app/node_modules
+    networks:
+      - app-network
+    command: npm run dev
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  neon-local-data:
