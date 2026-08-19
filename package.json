@@ -10,7 +10,8 @@
     "#routes/*": "./src/routes/*",
     "#validations/*": "./src/validations/*",
     "#utils/*": "./src/utils/*",
-    "#middlewares/*": "./src/middlewares/*"
+    "#middlewares/*": "./src/middlewares/*",
+    "#services/*": "./src/services/*"
   },
   "scripts": {
     "start": "node src/index.js",
