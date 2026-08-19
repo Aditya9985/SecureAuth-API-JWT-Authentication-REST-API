@@ -37,12 +37,16 @@ app.use('/health', (req, res) => {
       uptime: process.uptime(),
     });
 });
+app.use('/api', (req, res) => {
+  res.status(200).json({ message: 'API is working' });
+});
 
 app.use('/api/auth', authRoutes);
 app.use('/api/users', usersRoutes);
 
-app.use('/api', (req, res) => {
-  res.status(200).json({ message: 'API is working' });
+
+app.use((req, res) => {
+  res.status(404).json({ message: 'API not found' });
 });
 
 export default app;

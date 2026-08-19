@@ -1,0 +1,103 @@
+name: Tests
+
+on:
+  push:
+    branches: [main, staging]
+  pull_request:
+    branches: [main, staging]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_ENV: test
+  NODE_OPTIONS: --experimental-vm-modules
+  DATABASE_URL: ${{ secrets.DATABASE_URL }}
+  DB_URL: ${{ secrets.DATABASE_URL }}
+
+jobs:
+  test:
+    name: Run tests with coverage
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        id: test
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          npm test 2>&1 | tee /tmp/test.log
+          exit ${PIPESTATUS[0]}
+
+      - name: Annotate test failures
+        if: steps.test.outcome == 'failure'
+        run: |
+          echo "::error title=Tests failed::One or more tests failed. Run 'npm test' locally to reproduce."
+          if [ -f /tmp/test.log ]; then
+            grep -iE "✕|✗|FAIL|failed|jest" /tmp/test.log | while IFS= read -r line; do
+              echo "::error::$line"
+            done
+          fi
+
+      - name: Generate step summary with test and coverage status
+        if: always()
+        run: |
+          {
+            echo "## Test Results"
+            echo ""
+            echo "- **Status:** ${{ steps.test.outcome }}"
+            echo "- **Node.js:** 20.x"
+            echo "- **Date (UTC):** ${{ github.event.head_commit.timestamp }}"
+            echo ""
+            if [ -f coverage/coverage-summary.json ]; then
+              node -e "
+                const c = require('./coverage/coverage-summary.json');
+                const t = c.total || {};
+                console.log('### Coverage Summary');
+                console.log('');
+                console.log('| Metric | % Stmts | % Branch | % Funcs | % Lines |');
+                console.log('| --- | --- | --- | --- | --- |');
+                const row = (k, v) => \`| \${k} | \${v.pct} | \${v.pct} | \${v.pct} | \${v.pct} |\`;
+                if (t.statements) console.log(row('Statements', t.statements));
+                if (t.branches) console.log(row('Branches', t.branches));
+                if (t.functions) console.log(row('Functions', t.functions));
+                if (t.lines) console.log(row('Lines', t.lines));
+              "
+            else
+              echo "> No coverage-summary.json generated; check that a coverage reporter is configured."
+            fi
+            echo ""
+            echo "**Run:** [\${{ github.workflow }} #\${{ github.run_number }}](\${{ github.server_url }}/\${{ github.repository }}/actions/runs/\${{ github.run_id }})"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload test logs (on failure)
+        if: steps.test.outcome == 'failure'
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-logs
+          path: /tmp/test.log
+          retention-days: 30
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/
+          if-no-files-found: warn
+          retention-days: 30
