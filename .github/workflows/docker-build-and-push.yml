@@ -21,7 +21,10 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Validate Docker Hub secrets
-        if: secrets.DOCKER_USERNAME == '' || secrets.DOCKER_PASSWORD == ''
+        if: env.DOCKER_USERNAME == '' || env.DOCKER_PASSWORD == ''
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
         run: |
           echo "::error title=Docker secrets missing::Set DOCKER_USERNAME and DOCKER_PASSWORD repository secrets to publish the image."
           exit 1
