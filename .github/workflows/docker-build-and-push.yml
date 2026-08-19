@@ -44,6 +44,20 @@ jobs:
           echo "::error title=Docker secrets missing::Set DOCKER_PASSWORD repository secret to publish the image."
           exit 1
 
+      - name: Verify Docker Hub push access
+        env:
+          DOCKER_USERNAME: ${{ steps.image.outputs.username }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+        run: |
+          if ! curl -fsS \
+            --user "$DOCKER_USERNAME:$DOCKER_PASSWORD" \
+            "https://auth.docker.io/token?service=registry.docker.io&scope=repository:$DOCKER_USERNAME/secureauth-api-dev:pull,push" \
+            -o /dev/null; then
+            echo "::error title=Docker Hub push denied::The DOCKER_PASSWORD token cannot push to $DOCKER_USERNAME/secureauth-api-dev. Verify it is an access token from the '$DOCKER_USERNAME' Docker Hub account with Read, write permission (create it via Docker Hub > Account Settings > Security)."
+            echo "::error title=Docker Hub push denied::Remove any repository restrictions on the token, then update the DOCKER_PASSWORD secret."
+            exit 1
+          fi
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 

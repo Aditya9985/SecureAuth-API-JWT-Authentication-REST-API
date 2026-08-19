@@ -192,20 +192,20 @@ Server starts at `http://localhost:3000` (or `$PORT`).
 
 ## Available Scripts
 
-| Script                 | Description                  |
-| ---------------------- | ---------------------------- |
-| `npm run start`        | Start server (production)    |
-| `npm run dev`          | Start server with hot reload |
+| Script                 | Description                                     |
+| ---------------------- | ----------------------------------------------- |
+| `npm run start`        | Start server (production)                       |
+| `npm run dev`          | Start server with hot reload                    |
 | `npm test`             | Run tests with Jest (ESM, VM modules, coverage) |
-| `npm run lint`         | Run ESLint                   |
-| `npm run lint:fix`     | Auto-fix lint issues         |
-| `npm run format`       | Format code with Prettier    |
-| `npm run format:check` | Check formatting             |
-| `npm run db:generate`  | Generate Drizzle migrations  |
-| `npm run db:migrate`   | Apply migrations             |
-| `npm run db:studio`    | Open Drizzle Studio          |
-| `npm run dev:docker`   | Run dev container (hot reload) |
-| `npm run prod:docker`  | Run production container     |
+| `npm run lint`         | Run ESLint                                      |
+| `npm run lint:fix`     | Auto-fix lint issues                            |
+| `npm run format`       | Format code with Prettier                       |
+| `npm run format:check` | Check formatting                                |
+| `npm run db:generate`  | Generate Drizzle migrations                     |
+| `npm run db:migrate`   | Apply migrations                                |
+| `npm run db:studio`    | Open Drizzle Studio                             |
+| `npm run dev:docker`   | Run dev container (hot reload)                  |
+| `npm run prod:docker`  | Run production container                        |
 
 ## Testing
 
@@ -223,11 +223,11 @@ npm test
 
 Three automated pipelines live in `.github/workflows/`:
 
-| Workflow | Trigger | What it does |
-| --- | --- | --- |
-| `lint-and-format.yml` | Push / PR to `main` or `staging` | Node 20 + `npm ci`; runs `npm run lint` and `npm run format:check`; fails the job and annotates issues with fix suggestions (`npm run lint:fix` / `npm run format`). |
-| `tests.yml` | Push / PR to `main` or `staging` | Node 20 + `npm ci`; runs `npm test` with `NODE_ENV=test`, `NODE_OPTIONS=--experimental-vm-modules`, and `DATABASE_URL`; uploads coverage artifacts (30-day retention) and writes a test/coverage step summary. |
-| `docker-build-and-push.yml` | Push to `main` or manual `workflow_dispatch` | Docker Buildx multi-platform build (`linux/amd64`, `linux/arm64`); logs into Docker Hub; metadata tags (branch, SHA, `latest`, `prod-YYYYMMDD-HHmmss`); GHA layer caching; publishes image + summary. |
+| Workflow                    | Trigger                                      | What it does                                                                                                                                                                                                   |
+| --------------------------- | -------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `lint-and-format.yml`       | Push / PR to `main` or `staging`             | Node 20 + `npm ci`; runs `npm run lint` and `npm run format:check`; fails the job and annotates issues with fix suggestions (`npm run lint:fix` / `npm run format`).                                           |
+| `tests.yml`                 | Push / PR to `main` or `staging`             | Node 20 + `npm ci`; runs `npm test` with `NODE_ENV=test`, `NODE_OPTIONS=--experimental-vm-modules`, and `DATABASE_URL`; uploads coverage artifacts (30-day retention) and writes a test/coverage step summary. |
+| `docker-build-and-push.yml` | Push to `main` or manual `workflow_dispatch` | Docker Buildx multi-platform build (`linux/amd64`, `linux/arm64`); logs into Docker Hub; metadata tags (branch, SHA, `latest`, `prod-YYYYMMDD-HHmmss`); GHA layer caching; publishes image + summary.          |
 
 **Required repository secrets** (Settings → Secrets and variables → Actions):
 
