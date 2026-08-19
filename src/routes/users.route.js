@@ -1,13 +1,17 @@
 import express from 'express';
-import { fetchAllUsers } from '#controllers/users.controller.js';
+import { authenticate, requireRole } from '#middlewares/authenticate.middleware.js';
+import {
+  fetchAllUsers,
+  getUserById,
+  updateUser,
+  deleteUser,
+} from '#controllers/users.controller.js';
 
 const router = express.Router();
 
-// Define your user-related routes here
-router.get('/', fetchAllUsers);
-router.get('/:id', (req, res) => { res.send('GET /users/:id'); });
-router.put('/:id', (req, res) => { res.send('PUT /users/:id'); });
-router.delete('/:id', (req, res) => { res.send('DELETE /users/:id'); });
-
+router.get('/', authenticate, fetchAllUsers);
+router.get('/:id', authenticate, getUserById);
+router.put('/:id', authenticate, updateUser);
+router.delete('/:id', authenticate,requireRole(['admin']), deleteUser);
 
 export default router;

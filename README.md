@@ -47,15 +47,20 @@ src/
 ├── models/
 │   └── user.model.js            # Drizzle table schema: users
 ├── middlewares/
-│   └── security.middleware.js   # Arcjet protect() gate, runs before all routes
+│   ├── security.middleware.js   # Arcjet protect() gate, runs before all routes
+│   └── authenticate.middleware.js # JWT verification → req.user (own-account / RBAC checks)
 ├── routes/
-│   └── auth.route.js            # /api/auth/* route definitions
+│   ├── auth.routes.js            # /api/auth/* route definitions
+│   └── users.route.js           # /api/users/* CRUD routes
 ├── controllers/
-│   └── auth.controller.js       # Request/response handlers, validation, cookies
+│   ├── auth.controller.js       # Request/response handlers, validation, cookies
+│   └── users.controller.js      # User CRUD handlers + own-account/admin checks
 ├── services/
-│   └── auth.service.js          # Business logic: hashing, DB queries
+│   ├── auth.service.js          # Business logic: hashing, DB queries
+│   └── user.service.js          # User CRUD queries (get/update/delete)
 ├── validations/
-│   └── auth.validations.js      # Zod schemas for register & login
+│   ├── auth.validations.js      # Zod schemas for register & login
+│   └── users.validation.js      # Zod schemas for user ID & update payloads
 └── utils/
     ├── jwt.js                   # JWT sign/verify wrapper
     ├── cookies.js               # httpOnly cookie set/get/clear helpers
@@ -100,8 +105,17 @@ The same flow applies to **login** (`authenticateUser`: look up by email → `bc
 | POST   | `/api/auth/register`| Public    | `{ name, email, password, role? }` | `201` + user + token cookie | Create a new user account        |
 | POST   | `/api/auth/login`   | Public    | `{ email, password }`         | `200` + user + token cookie   | Authenticate and start a session |
 | POST   | `/api/auth/logout`  | Public    | —                             | `200` + message               | Clear the token cookie           |
+| GET    | `/api/users`        | JWT       | —                             | `200` + users + count         | List all users (no passwords)    |
+| GET    | `/api/users/:id`    | JWT       | —                             | `200` + user                  | Get a single user by ID          |
+| PUT    | `/api/users/:id`    | JWT       | `{ name?, email?, password?, role? }` | `200` + updated user    | Update own account (admin may update anyone & roles) |
+| DELETE | `/api/users/:id`    | JWT + Admin | —                          | `200` + message               | Delete a user (admin only)       |
 | GET    | `/health`           | Public    | —                             | `200` `{ status, timestamp, uptime }` | Health/liveness check  |
 | GET    | `/api`              | Public    | —                             | `200` `{ message }`           | API root ping                    |
+
+> **Access rules** — every `/api/users/*` endpoint requires a valid JWT (`authenticate` middleware, verified from the `token` cookie or `Bearer` header):
+> - `GET` — any authenticated user can fetch users.
+> - `PUT /api/users/:id` — users can update **only their own** account (`403` otherwise); only **`admin`** users can change the `role` of any user.
+> - `DELETE /api/users/:id` — **admin only** (`requireRole('admin')`).
 
 ### Error Handling
 
@@ -111,6 +125,10 @@ The same flow applies to **login** (`authenticateUser`: look up by email → `bc
 | Email already taken    | 409    | `{ message: "User already exists" }`    |
 | Account not found      | 404    | `{ message: "User not found" }`         |
 | Wrong password         | 401    | `{ message: "Invalid credentials" }`    |
+| Missing/invalid token  | 401    | `{ message: "Authentication required" }` / `"Invalid or expired token"` |
+| Permission denied      | 403    | `{ message: "You can only update your own account" }` |
+| Role change forbidden  | 403    | `{ message: "Only admins can change the role of a user" }` |
+| Admin route forbidden  | 403    | `{ message: "Forbidden: admin access required" }` |
 | Bot / attack detected  | 403    | `{ error: "Forbidden" }`                |
 | Rate limit exceeded    | 429    | `{ error, message, retryAfter }`        |
 | Unexpected server error| 500    | passed to Express error middleware      |
@@ -513,7 +531,7 @@ docker push {aws-account-id}.dkr.ecr.{region}.amazonaws.com/secureauth-api:lates
 
 ## Roadmap / Next Steps
 
-- Role-based access control (RBAC) middleware for protected `/api/admin` routes.
+- Dedicated `/api/admin/*` RBAC middleware guarding privileged endpoints.
 - Refresh-token rotation for longer-lived sessions.
 - Password reset & email verification flows.
 - Unit/integration tests (Vitest + Supertest).
