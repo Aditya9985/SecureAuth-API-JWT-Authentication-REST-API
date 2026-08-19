@@ -9,7 +9,10 @@ const securityMiddleware = async (req, res, next) => {
 
     if (decision.isDenied()) {
       if (decision.reason.isRateLimit()) {
-        logger.warn(`Rate limit exceeded from ${req.ip}`, { path: req.path, method: req.method });
+        logger.warn(`Rate limit exceeded from ${req.ip}`, {
+          path: req.path,
+          method: req.method,
+        });
         return res.status(429).json({
           error: 'Too many requests',
           message: 'Please try again later.',
@@ -18,7 +21,10 @@ const securityMiddleware = async (req, res, next) => {
       }
 
       if (decision.reason.isBot()) {
-        logger.warn(`Bot detected from ${req.ip}`, { path: req.path, method: req.method });
+        logger.warn(`Bot detected from ${req.ip}`, {
+          path: req.path,
+          method: req.method,
+        });
         return res.status(403).json({
           error: 'Forbidden',
           message: 'Automated requests are not allowed.',
@@ -26,24 +32,32 @@ const securityMiddleware = async (req, res, next) => {
       }
 
       if (decision.reason.isShield()) {
-        logger.warn(`Shield blocked request from ${req.ip}`, { path: req.path, method: req.method });
+        logger.warn(`Shield blocked request from ${req.ip}`, {
+          path: req.path,
+          method: req.method,
+        });
         return res.status(403).json({
           error: 'Forbidden',
           message: 'Request blocked for security reasons.',
         });
       }
 
-       if (decision.reason.isRateLimit()) {
-        logger.warn(`Rate limit exceeded from ${req.ip}`, { path: req.path, method: req.method });
+      if (decision.reason.isRateLimit()) {
+        logger.warn(`Rate limit exceeded from ${req.ip}`, {
+          path: req.path,
+          method: req.method,
+        });
         return res.status(429).json({
           error: 'Too many requests',
           message: 'Please try again later.',
           retryAfter: decision.headers.get('Retry-After'),
         });
       }
-      
 
-      logger.warn(`Request denied from ${req.ip}`, { path: req.path, reason: decision.reason });
+      logger.warn(`Request denied from ${req.ip}`, {
+        path: req.path,
+        reason: decision.reason,
+      });
       return res.status(403).json({
         error: 'Forbidden',
         message: 'Request blocked.',
@@ -52,7 +66,10 @@ const securityMiddleware = async (req, res, next) => {
 
     next();
   } catch (error) {
-    logger.error('Security middleware error', { error: error.message, ip: req.ip });
+    logger.error('Security middleware error', {
+      error: error.message,
+      ip: req.ip,
+    });
     return res.status(500).json({
       error: 'Internal server error',
       message: 'An unexpected security error occurred.',

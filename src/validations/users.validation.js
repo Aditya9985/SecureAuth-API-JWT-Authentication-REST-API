@@ -1,7 +1,10 @@
 import { z } from 'zod';
 
 export const userIdSchema = z.object({
-  id: z.coerce.number().int('id must be an integer').positive('id must be a positive number'),
+  id: z.coerce
+    .number()
+    .int('id must be an integer')
+    .positive('id must be a positive number'),
 });
 
 export const updateUserSchema = z
@@ -20,6 +23,6 @@ export const updateUserSchema = z
       .optional(),
     role: z.enum(['user', 'admin']).optional(),
   })
-  .refine((obj) => Object.keys(obj).length > 0, {
+  .refine(obj => Object.keys(obj).length > 0, {
     message: 'At least one field must be provided for update',
   });

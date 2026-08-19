@@ -6,7 +6,10 @@ import {
   updateUser as updateUserService,
   deleteUser as deleteUserService,
 } from '#services/user.service.js';
-import { userIdSchema, updateUserSchema } from '#validations/users.validation.js';
+import {
+  userIdSchema,
+  updateUserSchema,
+} from '#validations/users.validation.js';
 
 export const fetchAllUsers = async (req, res, next) => {
   try {
@@ -73,10 +76,14 @@ export const updateUser = async (req, res, next) => {
     const updates = bodyValidation.data;
 
     if (req.user.role !== 'admin' && req.user.id !== id) {
-      return res.status(403).json({ message: 'You can only update your own account' });
+      return res
+        .status(403)
+        .json({ message: 'You can only update your own account' });
     }
     if (updates.role && req.user.role !== 'admin') {
-      return res.status(403).json({ message: 'Only admins can change the role of a user' });
+      return res
+        .status(403)
+        .json({ message: 'Only admins can change the role of a user' });
     }
 
     const user = await updateUserService(id, updates);
@@ -108,7 +115,9 @@ export const deleteUser = async (req, res, next) => {
     const { id } = validationResult.data;
 
     if (req.user.role !== 'admin' && req.user.id !== id) {
-      return res.status(403).json({ message: 'You can only delete your own account' });
+      return res
+        .status(403)
+        .json({ message: 'You can only delete your own account' });
     }
 
     await deleteUserService(id);

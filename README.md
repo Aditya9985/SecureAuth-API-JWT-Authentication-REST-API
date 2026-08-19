@@ -17,19 +17,19 @@ The result is a reusable, layer-separated auth service you can drop into any fro
 
 ## Tech Stack
 
-| Layer            | Technology                                  | Purpose                                  |
-| ---------------- | ------------------------------------------- | ---------------------------------------- |
-| Runtime          | Node.js (ES Modules)                        | JavaScript runtime                       |
-| Framework        | Express 5                                   | HTTP server & routing                    |
-| Database         | PostgreSQL (Neon Serverless)                | Relational persistence (serverless-hosted) |
-| ORM              | Drizzle ORM + drizzle-kit                   | Type-safe schema & SQL query builder     |
-| Validation       | Zod                                          | Runtime input schema validation          |
-| Auth             | jsonwebtoken + bcrypt + cookie-parser       | JWT issuance, password hashing, cookies  |
-| Logging          | Winston + Morgan                            | Structured logs + HTTP request logging   |
-| Security         | Helmet + CORS                               | HTTP headers & cross-origin policy       |
-| Security         | @arcjet/node                                | Rate limiting, bot detection & Shield (SQLi/XSS) |
-| Config           | dotenv                                       | Environment variable management          |
-| Tooling          | ESLint + Prettier                           | Code quality & formatting                |
+| Layer      | Technology                            | Purpose                                          |
+| ---------- | ------------------------------------- | ------------------------------------------------ |
+| Runtime    | Node.js (ES Modules)                  | JavaScript runtime                               |
+| Framework  | Express 5                             | HTTP server & routing                            |
+| Database   | PostgreSQL (Neon Serverless)          | Relational persistence (serverless-hosted)       |
+| ORM        | Drizzle ORM + drizzle-kit             | Type-safe schema & SQL query builder             |
+| Validation | Zod                                   | Runtime input schema validation                  |
+| Auth       | jsonwebtoken + bcrypt + cookie-parser | JWT issuance, password hashing, cookies          |
+| Logging    | Winston + Morgan                      | Structured logs + HTTP request logging           |
+| Security   | Helmet + CORS                         | HTTP headers & cross-origin policy               |
+| Security   | @arcjet/node                          | Rate limiting, bot detection & Shield (SQLi/XSS) |
+| Config     | dotenv                                | Environment variable management                  |
+| Tooling    | ESLint + Prettier                     | Code quality & formatting                        |
 
 ## Project Structure
 
@@ -100,38 +100,39 @@ The same flow applies to **login** (`authenticateUser`: look up by email → `bc
 
 ## API Endpoints
 
-| Method | Endpoint            | Auth      | Request Body                  | Success Response              | Description                      |
-| ------ | ------------------- | --------- | ----------------------------- | ----------------------------- | -------------------------------- |
-| POST   | `/api/auth/register`| Public    | `{ name, email, password, role? }` | `201` + user + token cookie | Create a new user account        |
-| POST   | `/api/auth/login`   | Public    | `{ email, password }`         | `200` + user + token cookie   | Authenticate and start a session |
-| POST   | `/api/auth/logout`  | Public    | —                             | `200` + message               | Clear the token cookie           |
-| GET    | `/api/users`        | JWT       | —                             | `200` + users + count         | List all users (no passwords)    |
-| GET    | `/api/users/:id`    | JWT       | —                             | `200` + user                  | Get a single user by ID          |
-| PUT    | `/api/users/:id`    | JWT       | `{ name?, email?, password?, role? }` | `200` + updated user    | Update own account (admin may update anyone & roles) |
-| DELETE | `/api/users/:id`    | JWT + Admin | —                          | `200` + message               | Delete a user (admin only)       |
-| GET    | `/health`           | Public    | —                             | `200` `{ status, timestamp, uptime }` | Health/liveness check  |
-| GET    | `/api`              | Public    | —                             | `200` `{ message }`           | API root ping                    |
+| Method | Endpoint             | Auth        | Request Body                          | Success Response                      | Description                                          |
+| ------ | -------------------- | ----------- | ------------------------------------- | ------------------------------------- | ---------------------------------------------------- |
+| POST   | `/api/auth/register` | Public      | `{ name, email, password, role? }`    | `201` + user + token cookie           | Create a new user account                            |
+| POST   | `/api/auth/login`    | Public      | `{ email, password }`                 | `200` + user + token cookie           | Authenticate and start a session                     |
+| POST   | `/api/auth/logout`   | Public      | —                                     | `200` + message                       | Clear the token cookie                               |
+| GET    | `/api/users`         | JWT         | —                                     | `200` + users + count                 | List all users (no passwords)                        |
+| GET    | `/api/users/:id`     | JWT         | —                                     | `200` + user                          | Get a single user by ID                              |
+| PUT    | `/api/users/:id`     | JWT         | `{ name?, email?, password?, role? }` | `200` + updated user                  | Update own account (admin may update anyone & roles) |
+| DELETE | `/api/users/:id`     | JWT + Admin | —                                     | `200` + message                       | Delete a user (admin only)                           |
+| GET    | `/health`            | Public      | —                                     | `200` `{ status, timestamp, uptime }` | Health/liveness check                                |
+| GET    | `/api`               | Public      | —                                     | `200` `{ message }`                   | API root ping                                        |
 
 > **Access rules** — every `/api/users/*` endpoint requires a valid JWT (`authenticate` middleware, verified from the `token` cookie or `Bearer` header):
+>
 > - `GET` — any authenticated user can fetch users.
 > - `PUT /api/users/:id` — users can update **only their own** account (`403` otherwise); only **`admin`** users can change the `role` of any user.
 > - `DELETE /api/users/:id` — **admin only** (`requireRole('admin')`).
 
 ### Error Handling
 
-| Scenario               | Status | Response                                |
-| ---------------------- | ------ | --------------------------------------- |
-| Validation failed      | 400    | `{ error, details }` (formatted by Zod) |
-| Email already taken    | 409    | `{ message: "User already exists" }`    |
-| Account not found      | 404    | `{ message: "User not found" }`         |
-| Wrong password         | 401    | `{ message: "Invalid credentials" }`    |
-| Missing/invalid token  | 401    | `{ message: "Authentication required" }` / `"Invalid or expired token"` |
-| Permission denied      | 403    | `{ message: "You can only update your own account" }` |
-| Role change forbidden  | 403    | `{ message: "Only admins can change the role of a user" }` |
-| Admin route forbidden  | 403    | `{ message: "Forbidden: admin access required" }` |
-| Bot / attack detected  | 403    | `{ error: "Forbidden" }`                |
-| Rate limit exceeded    | 429    | `{ error, message, retryAfter }`        |
-| Unexpected server error| 500    | passed to Express error middleware      |
+| Scenario                | Status | Response                                                                |
+| ----------------------- | ------ | ----------------------------------------------------------------------- |
+| Validation failed       | 400    | `{ error, details }` (formatted by Zod)                                 |
+| Email already taken     | 409    | `{ message: "User already exists" }`                                    |
+| Account not found       | 404    | `{ message: "User not found" }`                                         |
+| Wrong password          | 401    | `{ message: "Invalid credentials" }`                                    |
+| Missing/invalid token   | 401    | `{ message: "Authentication required" }` / `"Invalid or expired token"` |
+| Permission denied       | 403    | `{ message: "You can only update your own account" }`                   |
+| Role change forbidden   | 403    | `{ message: "Only admins can change the role of a user" }`              |
+| Admin route forbidden   | 403    | `{ message: "Forbidden: admin access required" }`                       |
+| Bot / attack detected   | 403    | `{ error: "Forbidden" }`                                                |
+| Rate limit exceeded     | 429    | `{ error, message, retryAfter }`                                        |
+| Unexpected server error | 500    | passed to Express error middleware                                      |
 
 ## Security Features
 
@@ -191,16 +192,16 @@ Server starts at `http://localhost:3000` (or `$PORT`).
 
 ## Available Scripts
 
-| Script                 | Description                          |
-| ---------------------- | ------------------------------------ |
-| `npm run dev`          | Start server with hot reload         |
-| `npm run lint`         | Run ESLint                           |
-| `npm run lint:fix`     | Auto-fix lint issues                 |
-| `npm run format`       | Format code with Prettier            |
-| `npm run format:check` | Check formatting                     |
-| `npm run db:generate`  | Generate Drizzle migrations          |
-| `npm run db:migrate`   | Apply migrations                     |
-| `npm run db:studio`    | Open Drizzle Studio                  |
+| Script                 | Description                  |
+| ---------------------- | ---------------------------- |
+| `npm run dev`          | Start server with hot reload |
+| `npm run lint`         | Run ESLint                   |
+| `npm run lint:fix`     | Auto-fix lint issues         |
+| `npm run format`       | Format code with Prettier    |
+| `npm run format:check` | Check formatting             |
+| `npm run db:generate`  | Generate Drizzle migrations  |
+| `npm run db:migrate`   | Apply migrations             |
+| `npm run db:studio`    | Open Drizzle Studio          |
 
 ## Docker & Containerization
 
@@ -214,21 +215,21 @@ graph LR
     B["Docker Compose Dev<br/>docker-compose.dev.yml"]
     C["Neon Local<br/>PostgreSQL in Container"]
     D["SecureAuth API<br/>Docker Container"]
-    
+
     E["Docker Registry<br/>or Kubernetes"]
     F["Docker Compose Prod<br/>docker-compose.prod.yml"]
     G["Neon Cloud<br/>PostgreSQL as a Service"]
     H["SecureAuth API<br/>Production Container"]
-    
+
     A -->|npm start| B
     B --> C
     B --> D
     C <-->|connects| D
-    
+
     E -->|pull image| F
     F --> H
     G <-->|connects| H
-    
+
     style B fill:#e1f5ff
     style C fill:#c8e6c9
     style D fill:#fff9c4
@@ -253,6 +254,7 @@ docker-compose -f docker-compose.dev.yml up --build
 ```
 
 This command:
+
 1. Builds the Docker image for the API
 2. Starts Neon Local container (PostgreSQL)
 3. Starts the API container with `npm run dev` (hot reload enabled)
@@ -260,6 +262,7 @@ This command:
 5. Mounts your source code for live changes
 
 **Output:**
+
 ```
 neon-local-db | PostgreSQL is running
 secureauth-api-dev | Server is listening on port http://localhost:3000
@@ -340,6 +343,7 @@ docker-compose -f docker-compose.prod.yml up -d
 ```
 
 This command:
+
 1. Pulls the pre-built Docker image (or builds it)
 2. Starts the API container in detached mode (`-d`)
 3. Uses environment variables from `.env.production` or system environment
@@ -347,6 +351,7 @@ This command:
 5. **Does NOT** mount source code (uses built image only)
 
 **Output:**
+
 ```
 secureauth-api-prod | Server is listening on port http://localhost:3000
 ```
@@ -365,6 +370,7 @@ ARCJET_KEY=ajkey_your_production_key
 ```
 
 **Important Security Notes:**
+
 - Never commit `.env.production` to git (already in `.gitignore`)
 - Use strong, randomly-generated JWT secrets (≥32 characters)
 - Set `NODE_ENV=production` to disable hot-reload and optimize logging
@@ -414,17 +420,17 @@ Key features:
 
 ### Environment-Specific Configurations
 
-| Aspect              | Development (Neon Local) | Production (Neon Cloud) |
-| ------------------- | ----------------------- | ----------------------- |
-| **Database**        | `neon-local` (in Docker) | Neon Cloud (external SaaS) |
-| **Connection**      | `neon-local:5432` | `ep-xxx.neon.tech:5432` |
-| **Data Persistence**| Docker volume (ephemeral) | Managed by Neon |
-| **Node Env**        | `development` | `production` |
-| **Hot Reload**      | ✅ Enabled (`npm run dev`) | ❌ Disabled (built image) |
-| **Log Level**       | `info` (verbose) | `warn` (errors only) |
-| **Source Mounting** | ✅ Yes (live code changes) | ❌ No (immutable image) |
-| **Restart Policy**  | No automatic restart | Always restart on failure |
-| **Health Checks**   | Basic | Continuous monitoring |
+| Aspect               | Development (Neon Local)   | Production (Neon Cloud)    |
+| -------------------- | -------------------------- | -------------------------- |
+| **Database**         | `neon-local` (in Docker)   | Neon Cloud (external SaaS) |
+| **Connection**       | `neon-local:5432`          | `ep-xxx.neon.tech:5432`    |
+| **Data Persistence** | Docker volume (ephemeral)  | Managed by Neon            |
+| **Node Env**         | `development`              | `production`               |
+| **Hot Reload**       | ✅ Enabled (`npm run dev`) | ❌ Disabled (built image)  |
+| **Log Level**        | `info` (verbose)           | `warn` (errors only)       |
+| **Source Mounting**  | ✅ Yes (live code changes) | ❌ No (immutable image)    |
+| **Restart Policy**   | No automatic restart       | Always restart on failure  |
+| **Health Checks**    | Basic                      | Continuous monitoring      |
 
 ### Switching Between Environments
 
@@ -490,27 +496,27 @@ spec:
         app: secureauth-api
     spec:
       containers:
-      - name: api
-        image: your-username/secureauth-api:latest
-        ports:
-        - containerPort: 3000
-        env:
-        - name: DB_URL
-          valueFrom:
-            secretKeyRef:
-              name: secureauth-secrets
-              key: database-url
-        - name: JWT_SECRET
-          valueFrom:
-            secretKeyRef:
-              name: secureauth-secrets
-              key: jwt-secret
-        livenessProbe:
-          httpGet:
-            path: /health
-            port: 3000
-          initialDelaySeconds: 30
-          periodSeconds: 10
+        - name: api
+          image: your-username/secureauth-api:latest
+          ports:
+            - containerPort: 3000
+          env:
+            - name: DB_URL
+              valueFrom:
+                secretKeyRef:
+                  name: secureauth-secrets
+                  key: database-url
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: secureauth-secrets
+                  key: jwt-secret
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 30
+            periodSeconds: 10
 ```
 
 #### AWS ECS / Fargate

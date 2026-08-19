@@ -3,16 +3,19 @@
 ## One-Command Startup
 
 ### Development (Neon Local)
+
 ```bash
 ./dev.sh
 ```
 
 ### Production (Neon Cloud)
+
 ```bash
 ./prod.sh
 ```
 
 That's it! The scripts handle:
+
 - ✅ Checking Docker installation
 - ✅ Validating environment files
 - ✅ Building Docker images
@@ -26,6 +29,7 @@ That's it! The scripts handle:
 ## What These Scripts Do
 
 ### `dev.sh` - Development Environment
+
 1. **Validates setup** — checks `.env.development`, Docker, and dependencies
 2. **Creates directories** — sets up `.neon_local/` for local data
 3. **Starts containers** — runs Neon Local and API with hot-reload
@@ -36,6 +40,7 @@ That's it! The scripts handle:
 **Result:** Development server running at `http://localhost:3000` with hot-reload enabled.
 
 ### `prod.sh` - Production Environment
+
 1. **Validates setup** — checks `.env.production` and security requirements
 2. **Builds image** — creates optimized Docker image
 3. **Starts container** — runs API in production mode
@@ -49,11 +54,13 @@ That's it! The scripts handle:
 ## Prerequisites
 
 ### Required
+
 - **Docker** & **Docker Compose** (v2.0+)
 - **Node.js** ≥ 24.5.0 (for local development without Docker)
 - **npm** (comes with Node)
 
 ### Files to Prepare
+
 - **Development:** `.env.development` with Neon credentials
 - **Production:** `.env.production` with Neon Cloud URL and secrets
 
@@ -62,6 +69,7 @@ That's it! The scripts handle:
 ## Development Workflow
 
 ### First Time Setup
+
 ```bash
 # 1. Install dependencies
 npm install
@@ -75,6 +83,7 @@ cp .env.example .env.development
 ```
 
 ### Daily Development
+
 ```bash
 # Just run the script
 ./dev.sh
@@ -83,6 +92,7 @@ cp .env.example .env.development
 Your code changes auto-reload instantly. No need to restart containers.
 
 ### Database Operations
+
 While `dev.sh` is running in another terminal:
 
 ```bash
@@ -97,6 +107,7 @@ docker compose -f docker-compose.dev.yml exec neon-local psql -U postgres
 ```
 
 ### View Logs
+
 ```bash
 # App logs
 docker compose -f docker-compose.dev.yml logs -f app
@@ -109,6 +120,7 @@ docker compose -f docker-compose.dev.yml logs -f
 ```
 
 ### Stop Development
+
 ```bash
 # Option 1: Press Ctrl+C in the terminal running dev.sh
 # Option 2: In another terminal
@@ -123,6 +135,7 @@ docker compose -f docker-compose.dev.yml down -v
 ## Production Deployment
 
 ### First Time Setup
+
 ```bash
 # 1. Create .env.production with Neon Cloud URL
 cp .env.example .env.production
@@ -136,11 +149,13 @@ cp .env.example .env.production
 ```
 
 ### Redeploy
+
 ```bash
 ./prod.sh
 ```
 
 ### Monitor Production
+
 ```bash
 # View logs
 docker compose -f docker-compose.prod.yml logs -f
@@ -153,6 +168,7 @@ curl http://localhost:3000/health
 ```
 
 ### Stop Production
+
 ```bash
 docker compose -f docker-compose.prod.yml down
 ```
@@ -162,6 +178,7 @@ docker compose -f docker-compose.prod.yml down
 ## Environment Files Reference
 
 ### `.env.development`
+
 ```env
 PORT=3000
 NODE_ENV=development
@@ -181,6 +198,7 @@ NEON_BRANCH_ID=main
 ```
 
 ### `.env.production`
+
 ```env
 PORT=3000
 NODE_ENV=production
@@ -201,25 +219,33 @@ ARCJET_KEY=ajkey_production
 ## Troubleshooting
 
 ### Docker not running
+
 ```
 ❌ Error: Docker is not running!
 ```
+
 **Solution:** Start Docker Desktop or the Docker daemon.
 
 ### Port already in use
+
 ```
 ERROR: bind: address already in use
 ```
+
 **Solution:** Change the port in your `.env` file:
+
 ```env
 PORT=3001  # Use a different port
 ```
 
 ### Database connection failed
+
 ```
 Error connecting to database: ECONNREFUSED
 ```
+
 **Dev:**
+
 ```bash
 # Check if neon-local is running
 docker compose -f docker-compose.dev.yml ps
@@ -229,6 +255,7 @@ docker compose -f docker-compose.dev.yml logs neon-local
 ```
 
 **Prod:**
+
 ```bash
 # Verify DB_URL is correct
 cat .env.production | grep DB_URL
@@ -238,21 +265,26 @@ psql $DB_URL -c "SELECT version();"
 ```
 
 ### API won't start
+
 ```
 Error: Cannot find module 'express'
 ```
+
 **Solution:** Install dependencies inside the container:
+
 ```bash
 docker compose -f docker-compose.dev.yml exec app npm install
 ```
 
 ### Out of disk space
+
 ```bash
 # Remove unused containers and images
 docker system prune -a --volumes
 ```
 
 ### Permission denied when running scripts
+
 ```bash
 chmod +x dev.sh prod.sh
 ```
@@ -264,11 +296,13 @@ chmod +x dev.sh prod.sh
 Once the server is running:
 
 ### Health Check
+
 ```bash
 curl http://localhost:3000/health
 ```
 
 ### Register User
+
 ```bash
 curl -X POST http://localhost:3000/api/auth/register \
   -H "Content-Type: application/json" \
@@ -281,6 +315,7 @@ curl -X POST http://localhost:3000/api/auth/register \
 ```
 
 ### Login
+
 ```bash
 curl -X POST http://localhost:3000/api/auth/login \
   -H "Content-Type: application/json" \
@@ -291,6 +326,7 @@ curl -X POST http://localhost:3000/api/auth/login \
 ```
 
 ### Logout
+
 ```bash
 curl -X POST http://localhost:3000/api/auth/logout
 ```

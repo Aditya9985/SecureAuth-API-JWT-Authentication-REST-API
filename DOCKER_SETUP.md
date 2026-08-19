@@ -11,6 +11,7 @@ docker-compose -f docker-compose.dev.yml up --build
 ```
 
 Then test the API:
+
 ```bash
 curl http://localhost:3000/health
 ```
@@ -31,15 +32,15 @@ docker-compose -f docker-compose.prod.yml up -d
 
 ## 📁 Files Overview
 
-| File                    | Purpose                                          |
-| ----------------------- | ------------------------------------------------ |
-| `Dockerfile`            | Multi-stage build for production image          |
-| `docker-compose.dev.yml` | Local dev with Neon Local + hot reload          |
-| `docker-compose.prod.yml` | Production with Neon Cloud + health checks      |
-| `.env.example`          | Template for environment variables              |
-| `.env.development`      | Dev config (Neon Local)                         |
-| `.env.production`       | Prod config (Neon Cloud) — never commit         |
-| `.dockerignore`         | Files to exclude from Docker build              |
+| File                      | Purpose                                    |
+| ------------------------- | ------------------------------------------ |
+| `Dockerfile`              | Multi-stage build for production image     |
+| `docker-compose.dev.yml`  | Local dev with Neon Local + hot reload     |
+| `docker-compose.prod.yml` | Production with Neon Cloud + health checks |
+| `.env.example`            | Template for environment variables         |
+| `.env.development`        | Dev config (Neon Local)                    |
+| `.env.production`         | Prod config (Neon Cloud) — never commit    |
+| `.dockerignore`           | Files to exclude from Docker build         |
 
 ---
 
@@ -52,6 +53,7 @@ docker-compose -f docker-compose.dev.yml up --build
 ```
 
 Includes:
+
 - Neon Local PostgreSQL container
 - SecureAuth API with hot-reload
 - Automatic database health checks
@@ -99,6 +101,7 @@ docker build -t secureauth-api:latest .
 ```
 
 Or via Compose:
+
 ```bash
 docker-compose -f docker-compose.prod.yml build
 ```
@@ -132,6 +135,7 @@ docker-compose -f docker-compose.prod.yml down
 ### Development (Neon Local)
 
 `.env.development`:
+
 ```env
 PORT=3000
 NODE_ENV=development
@@ -146,6 +150,7 @@ ARCJET_KEY=ajkey_dev
 ### Production (Neon Cloud)
 
 `.env.production`:
+
 ```env
 PORT=3000
 NODE_ENV=production
@@ -156,6 +161,7 @@ ARCJET_KEY=ajkey_prod
 ```
 
 **Important**: This file should NOT be committed to git. Set variables via:
+
 - Environment variables
 - Secret management (AWS Secrets Manager, etc.)
 - CI/CD pipeline secrets
@@ -165,13 +171,16 @@ ARCJET_KEY=ajkey_prod
 ## 🐳 Docker Image Details
 
 ### Base Image
+
 - **Node 24 Alpine**: ~150MB base, optimized for production
 - **Multi-stage build**: Dev dependencies excluded from final image
 
 ### Final Image Size
+
 - ~250–300MB (vs ~1GB for full Node image)
 
 ### Security
+
 - Non-root user (`nodejs:1001`)
 - No dev dependencies in production
 - Health check enabled
@@ -230,6 +239,7 @@ docker push yourusername/secureauth-api:latest
 ### Kubernetes
 
 Deploy with:
+
 ```bash
 kubectl apply -f k8s-deployment.yaml
 ```
@@ -263,6 +273,7 @@ docker-compose -f docker-compose.dev.yml logs neon-local
 ### Can't connect to database
 
 **Dev**:
+
 ```bash
 # Check Neon Local is running
 docker-compose -f docker-compose.dev.yml ps
@@ -272,6 +283,7 @@ docker-compose -f docker-compose.dev.yml exec app psql postgresql://postgres:pas
 ```
 
 **Prod**:
+
 ```bash
 # Verify DB_URL is correct
 echo $DB_URL

@@ -29,13 +29,11 @@ app.get('/', (req, res) => {
   res.status(200).send('Pluto is running');
 });
 app.use('/health', (req, res) => {
-  res
-    .status(200)
-    .json({
-      status: 'ok',
-      timestamp: new Date().toISOString(),
-      uptime: process.uptime(),
-    });
+  res.status(200).json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+  });
 });
 app.use('/api', (req, res) => {
   res.status(200).json({ message: 'API is working' });
@@ -43,7 +41,6 @@ app.use('/api', (req, res) => {
 
 app.use('/api/auth', authRoutes);
 app.use('/api/users', usersRoutes);
-
 
 app.use((req, res) => {
   res.status(404).json({ message: 'API not found' });

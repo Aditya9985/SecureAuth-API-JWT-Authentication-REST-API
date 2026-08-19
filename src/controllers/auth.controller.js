@@ -5,8 +5,8 @@ import { createUser, authenticateUser } from '../services/auth.service.js';
 import { jwttoken } from '#utils/jwt.js';
 import { cookies } from '#utils/cookies.js';
 
-export const safeParseSignupSchema = (body) => registerSchema.safeParse(body);
-export const safeParseLoginSchema = (body) => loginSchema.safeParse(body);
+export const safeParseSignupSchema = body => registerSchema.safeParse(body);
+export const safeParseLoginSchema = body => loginSchema.safeParse(body);
 
 export const signup = async (req, res, next) => {
   try {
@@ -25,13 +25,22 @@ export const signup = async (req, res, next) => {
       return res.status(500).json({ message: 'User creation failed' });
     }
 
-    const token = jwttoken.sign({ id: user.id, email: user.email, role: user.role });
+    const token = jwttoken.sign({
+      id: user.id,
+      email: user.email,
+      role: user.role,
+    });
     cookies.set(res, 'token', token);
 
     logger.info(`Signup request received for email: ${email}`);
     return res.status(201).json({
       message: 'User registered successfully',
-      user: { id: user.id, name: user.name, email: user.email, role: user.role },
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
     });
   } catch (e) {
     logger.error('Error in signup controller:', e);
@@ -55,13 +64,22 @@ export const signin = async (req, res, next) => {
     const { email, password } = validationResult.data;
     const user = await authenticateUser({ email, password });
 
-    const token = jwttoken.sign({ id: user.id, email: user.email, role: user.role });
+    const token = jwttoken.sign({
+      id: user.id,
+      email: user.email,
+      role: user.role,
+    });
     cookies.set(res, 'token', token);
 
     logger.info(`Login request received for email: ${email}`);
     return res.status(200).json({
       message: 'Login successful',
-      user: { id: user.id, name: user.name, email: user.email, role: user.role },
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
     });
   } catch (e) {
     logger.error('Error in login controller:', e);

@@ -10,7 +10,7 @@ permissions:
 
 env:
   REGISTRY: docker.io
-  IMAGE_NAME: ${{ secrets.DOCKER_USERNAME }}/secureauth-api
+  IMAGE_NAME: ${{ secrets.DOCKER_USERNAME }}/secureauth-api-dev
 
 jobs:
   docker:

@@ -9,7 +9,7 @@ services:
     container_name: secureauth-api-prod
     restart: always
     ports:
-      - "3000:3000"
+      - '3000:3000'
     env_file:
       - .env.production
     # Do NOT mount source code in production - use built image only
@@ -18,7 +18,7 @@ services:
       - app-network
     # Health check for orchestration systems (Kubernetes, Docker Swarm, etc)
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      test: ['CMD', 'curl', '-f', 'http://localhost:3000/health']
       interval: 30s
       timeout: 10s
       retries: 3

@@ -4,12 +4,12 @@ import { db } from '#config/database.js';
 import { users } from '#models/user.model.js';
 import { eq } from 'drizzle-orm';
 
-export const hashPassword = async (password) => {
+export const hashPassword = async password => {
   try {
     return await bcrypt.hash(password, 10);
   } catch (err) {
     logger.error('Error hashing password:', err);
-    throw new Error('Error hashing password');
+    throw new Error('Error hashing password', { cause: err });
   }
 };
 
@@ -18,7 +18,7 @@ export const comparePassword = async (password, hashedPassword) => {
     return await bcrypt.compare(password, hashedPassword);
   } catch (err) {
     logger.error('Error comparing password:', err);
-    throw new Error('Error comparing password');
+    throw new Error('Error comparing password', { cause: err });
   }
 };
 

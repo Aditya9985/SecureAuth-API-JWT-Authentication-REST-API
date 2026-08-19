@@ -22,7 +22,7 @@ export const getAllUsers = async () => {
   }
 };
 
-export const getUserById = async (id) => {
+export const getUserById = async id => {
   try {
     const result = await db
       .select(userProjection)
@@ -43,7 +43,11 @@ export const getUserById = async (id) => {
 
 export const updateUser = async (id, updates) => {
   try {
-    const existing = await db.select({ id: users.id }).from(users).where(eq(users.id, id)).limit(1);
+    const existing = await db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.id, id))
+      .limit(1);
     if (existing.length === 0) {
       throw new Error('User not found');
     }
@@ -54,7 +58,11 @@ export const updateUser = async (id, updates) => {
       data.password = await hashPassword(password);
     }
 
-    const result = await db.update(users).set(data).where(eq(users.id, id)).returning(userProjection);
+    const result = await db
+      .update(users)
+      .set(data)
+      .where(eq(users.id, id))
+      .returning(userProjection);
 
     logger.info(`User updated successfully with id: ${id}`);
     return result[0] ?? null;
@@ -64,9 +72,13 @@ export const updateUser = async (id, updates) => {
   }
 };
 
-export const deleteUser = async (id) => {
+export const deleteUser = async id => {
   try {
-    const existing = await db.select({ id: users.id }).from(users).where(eq(users.id, id)).limit(1);
+    const existing = await db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.id, id))
+      .limit(1);
     if (existing.length === 0) {
       throw new Error('User not found');
     }

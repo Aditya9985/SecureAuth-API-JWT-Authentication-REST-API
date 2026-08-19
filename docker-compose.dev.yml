@@ -6,14 +6,14 @@ services:
     image: neondatabase/neon-local:latest
     container_name: neon-local-db
     ports:
-      - "5432:5432"
+      - '5432:5432'
     env_file:
       - .env.development
     volumes:
       # Persist PostgreSQL data across container restarts
       - neon-local-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -27,10 +27,10 @@ services:
       dockerfile: Dockerfile
     container_name: secureauth-api-dev
     ports:
-      - "3000:3000"
+      - '3000:3000'
     env_file:
       - .env.development
-    
+
     depends_on:
       neon-local:
         condition: service_healthy
