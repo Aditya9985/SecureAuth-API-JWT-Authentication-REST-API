@@ -194,7 +194,9 @@ Server starts at `http://localhost:3000` (or `$PORT`).
 
 | Script                 | Description                  |
 | ---------------------- | ---------------------------- |
+| `npm run start`        | Start server (production)    |
 | `npm run dev`          | Start server with hot reload |
+| `npm test`             | Run tests with Jest (ESM, VM modules, coverage) |
 | `npm run lint`         | Run ESLint                   |
 | `npm run lint:fix`     | Auto-fix lint issues         |
 | `npm run format`       | Format code with Prettier    |
@@ -202,6 +204,35 @@ Server starts at `http://localhost:3000` (or `$PORT`).
 | `npm run db:generate`  | Generate Drizzle migrations  |
 | `npm run db:migrate`   | Apply migrations             |
 | `npm run db:studio`    | Open Drizzle Studio          |
+| `npm run dev:docker`   | Run dev container (hot reload) |
+| `npm run prod:docker`  | Run production container     |
+
+## Testing
+
+The project uses **[Jest](https://jestjs.io)** with native ESM support (`--experimental-vm-modules`) and coverage reporting:
+
+```bash
+npm test
+```
+
+- Runs via `jest.config.mjs`; covers the Express app, middleware, and utilities.
+- Emits a `coverage/` report (gitignored after each run).
+- Requires `NODE_ENV=test` and a `DATABASE_URL`/`DB_URL` when tests hit the database.
+
+## CI/CD — GitHub Actions
+
+Three automated pipelines live in `.github/workflows/`:
+
+| Workflow | Trigger | What it does |
+| --- | --- | --- |
+| `lint-and-format.yml` | Push / PR to `main` or `staging` | Node 20 + `npm ci`; runs `npm run lint` and `npm run format:check`; fails the job and annotates issues with fix suggestions (`npm run lint:fix` / `npm run format`). |
+| `tests.yml` | Push / PR to `main` or `staging` | Node 20 + `npm ci`; runs `npm test` with `NODE_ENV=test`, `NODE_OPTIONS=--experimental-vm-modules`, and `DATABASE_URL`; uploads coverage artifacts (30-day retention) and writes a test/coverage step summary. |
+| `docker-build-and-push.yml` | Push to `main` or manual `workflow_dispatch` | Docker Buildx multi-platform build (`linux/amd64`, `linux/arm64`); logs into Docker Hub; metadata tags (branch, SHA, `latest`, `prod-YYYYMMDD-HHmmss`); GHA layer caching; publishes image + summary. |
+
+**Required repository secrets** (Settings → Secrets and variables → Actions):
+
+- `DOCKER_USERNAME`, `DOCKER_PASSWORD` — Docker Hub credentials for the build/push workflow.
+- `DATABASE_URL` — used by `tests.yml` for test runs.
 
 ## Docker & Containerization
 
